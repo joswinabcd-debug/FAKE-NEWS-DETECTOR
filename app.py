@@ -103,9 +103,16 @@ st.markdown("""
         margin: 0 !important;
     }
 
-    /* Completely hide native radio button circle, inputs, and icons */
-    label[data-testid="stRadioOption"] input,
-    label[data-testid="stRadioOption"] > span,
+    /* Position native radio input off-screen without breaking event dispatch */
+    label[data-testid="stRadioOption"] input {
+        opacity: 0 !important;
+        position: absolute !important;
+        width: 0 !important;
+        height: 0 !important;
+        pointer-events: none !important;
+    }
+
+    /* Completely hide native circular radio button icons and graphics */
     label[data-testid="stRadioOption"] svg,
     label[data-testid="stRadioOption"] div[class*="e1mpz0hj4"],
     label[data-testid="stRadioOption"] div[class*="e1mpz0hj5"],
@@ -516,12 +523,10 @@ if "current_nav" not in st.session_state:
 selected_tab = st.radio(
     "Navigation Menu",
     options=NAV_OPTIONS,
-    index=NAV_OPTIONS.index(st.session_state.current_nav) if st.session_state.current_nav in NAV_OPTIONS else 0,
+    key="current_nav",
     horizontal=True,
     label_visibility="collapsed"
 )
-
-st.session_state.current_nav = selected_tab
 
 # System Status Sub-header Bar (Clean Metallic Status Strip)
 exists, _ = check_dataset_exists()
@@ -541,7 +546,7 @@ st.markdown(f"""
 # -----------------------------------------------------------------------------
 # TAB 1: HOME
 # -----------------------------------------------------------------------------
-if st.session_state.current_nav == "HOME":
+if selected_tab == "HOME":
     st.markdown("""
     <div class="metallic-hero-card">
         <div class="hero-brand">TRUTHSCAN AI</div>
@@ -618,7 +623,7 @@ if st.session_state.current_nav == "HOME":
 # -----------------------------------------------------------------------------
 # TAB 2: FAKE NEWS DETECTOR
 # -----------------------------------------------------------------------------
-elif st.session_state.current_nav == "FAKE NEWS DETECTOR":
+elif selected_tab == "FAKE NEWS DETECTOR":
     st.markdown("### Fake News Detector")
     st.caption("Enter a news headline and article text to analyze with trained deep learning models.")
 
@@ -737,7 +742,7 @@ elif st.session_state.current_nav == "FAKE NEWS DETECTOR":
 # -----------------------------------------------------------------------------
 # TAB 3: MODEL COMPARISON
 # -----------------------------------------------------------------------------
-elif st.session_state.current_nav == "MODEL COMPARISON":
+elif selected_tab == "MODEL COMPARISON":
     st.markdown("### Model Comparison & Evaluation")
     st.caption("Empirical performance metrics measured on the untouched 10% test dataset split.")
 
@@ -784,7 +789,7 @@ elif st.session_state.current_nav == "MODEL COMPARISON":
 # -----------------------------------------------------------------------------
 # TAB 4: TRAINING
 # -----------------------------------------------------------------------------
-elif st.session_state.current_nav == "TRAINING":
+elif selected_tab == "TRAINING":
     st.markdown("### Model Training Pipeline")
     st.caption("Configure hyperparameters and train PyTorch deep learning models.")
 
@@ -921,7 +926,7 @@ elif st.session_state.current_nav == "TRAINING":
 # -----------------------------------------------------------------------------
 # TAB 5: ABOUT
 # -----------------------------------------------------------------------------
-elif st.session_state.current_nav == "ABOUT":
+elif selected_tab == "ABOUT":
     st.markdown("### About TRUTHSCAN AI")
     st.caption("Deep learning research project for natural language veracity classification.")
 
