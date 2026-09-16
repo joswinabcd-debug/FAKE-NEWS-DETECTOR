@@ -1,0 +1,23 @@
+{
+  "train_loss": [
+    0.6106,
+    0.2985
+  ],
+  "train_acc": [
+    0.6305,
+    0.901
+  ],
+  "val_loss": [
+    0.3418,
+    0.4663
+  ],
+  "val_acc": [
+    0.896,
+    0.762
+  ],
+  "epochs": 2,
+  "mode": "quick",
+  "device": "cpu",
+  "total_training_time": 22.22,
+  "best_val_acc": 0.896
+}
