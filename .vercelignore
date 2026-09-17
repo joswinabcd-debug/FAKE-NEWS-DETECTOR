@@ -1,0 +1,11 @@
+# Vercel Deployment Ignore Configuration
+# Prevents Vercel from scanning local runners as conflicting entrypoints
+# and excludes heavy unnecessary local artifacts.
+
+server.py
+main.py
+run.bat
+venv/
+__pycache__/
+*.pyc
+archive/

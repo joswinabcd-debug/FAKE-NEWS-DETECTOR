@@ -15,9 +15,12 @@ TOKENIZER_DIR = os.path.join(BASE_DIR, "tokenizer")
 RESULTS_DIR = os.path.join(BASE_DIR, "results")
 PLOTS_DIR = os.path.join(RESULTS_DIR, "plots")
 
-# Ensure required directories exist
+# Ensure required directories exist (safely catch read-only serverless filesystem)
 for directory in [DATA_DIR, PROCESSED_DIR, CHECKPOINTS_DIR, TOKENIZER_DIR, RESULTS_DIR, PLOTS_DIR]:
-    os.makedirs(directory, exist_ok=True)
+    try:
+        os.makedirs(directory, exist_ok=True)
+    except OSError:
+        pass
 
 ARCHIVE_DIR = os.path.join(BASE_DIR, "archive")
 

@@ -274,6 +274,13 @@ class handler(BaseHTTPRequestHandler):
                 self.wfile.write(json.dumps({"error": "Target must be 'cnn', 'lstm', or 'both'."}).encode("utf-8"))
                 return
 
+            if os.environ.get("VERCEL") == "1":
+                self._set_headers(400)
+                self.wfile.write(json.dumps({
+                    "error": "Model retraining is supported exclusively in local development. Vercel serverless functions enforce strict execution timeouts and read-only filesystems. Pre-trained CNN (95.00%) and LSTM (91.20%) checkpoints are loaded for fast inference."
+                }).encode("utf-8"))
+                return
+
             try:
                 from src.train import train_pipeline
                 from src.evaluate import evaluate_models

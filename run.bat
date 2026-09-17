@@ -6,7 +6,7 @@ cd /d "%~dp0"
 
 echo ===================================================
 echo             TRUTHSCAN AI - LAUNCHER
-echo   Deep Learning Fake News Detection (CNN & LSTM)
+echo   Deep Learning Fake News Detection (CNN ^& LSTM)
 echo              Standard Web Application
 echo ===================================================
 echo.
