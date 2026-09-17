@@ -4,6 +4,7 @@ Strictly adheres to ISOT dataset structure, stratified 80/10/10 split, and zero-
 """
 
 import os
+import json
 import random
 import numpy as np
 import pandas as pd
@@ -128,11 +129,27 @@ def load_raw_data() -> pd.DataFrame:
     return df
 
 
+_DATASET_STATS_CACHE: Optional[Dict[str, Any]] = None
+
 def get_dataset_statistics() -> Dict[str, Any]:
     """
     Computes genuine statistical metrics from the active ISOT dataset.
+    Caches results to disk/memory to ensure sub-millisecond API responses.
     Returns error metadata if files are absent.
     """
+    global _DATASET_STATS_CACHE
+    if _DATASET_STATS_CACHE is not None:
+        return _DATASET_STATS_CACHE
+
+    stats_cache_path = os.path.join(config.DATA_DIR, "dataset_stats.json")
+    if os.path.exists(stats_cache_path):
+        try:
+            with open(stats_cache_path, "r", encoding="utf-8") as f:
+                _DATASET_STATS_CACHE = json.load(f)
+                return _DATASET_STATS_CACHE
+        except Exception:
+            pass
+
     exists, err_msg = check_dataset_exists()
     if not exists:
         return {"available": False, "error": err_msg}
@@ -152,7 +169,7 @@ def get_dataset_statistics() -> Dict[str, Any]:
         val_samples = int(total_articles * config.VAL_RATIO)
         test_samples = total_articles - train_samples - val_samples
 
-        return {
+        res = {
             "available": True,
             "total_articles": total_articles,
             "fake_articles": fake_count,
@@ -163,6 +180,13 @@ def get_dataset_statistics() -> Dict[str, Any]:
             "avg_article_length": round(avg_length, 1),
             "subjects": df["subject"].value_counts().to_dict(),
         }
+        _DATASET_STATS_CACHE = res
+        try:
+            with open(stats_cache_path, "w", encoding="utf-8") as f:
+                json.dump(res, f, indent=2)
+        except Exception:
+            pass
+        return res
     except Exception as e:
         return {"available": False, "error": str(e)}
 

@@ -7,6 +7,7 @@ cd /d "%~dp0"
 echo ===================================================
 echo             TRUTHSCAN AI - LAUNCHER
 echo   Deep Learning Fake News Detection (CNN & LSTM)
+echo              Standard Web Application
 echo ===================================================
 echo.
 
@@ -43,7 +44,7 @@ if %errorlevel% neq 0 (
 
 :: Check if requirements need to be installed
 echo [INFO] Verifying installed dependencies...
-python -c "import torch, streamlit, sklearn, matplotlib, pandas, tqdm, openpyxl" >nul 2>nul
+python -c "import torch, sklearn, matplotlib, pandas, tqdm, openpyxl" >nul 2>nul
 if %errorlevel% neq 0 (
     echo [INFO] Installing required packages from requirements.txt...
     pip install -r requirements.txt
@@ -60,15 +61,15 @@ if %errorlevel% neq 0 (
 :: Starting application
 echo.
 echo ===================================================
-echo Starting TRUTHSCAN AI...
-echo Opening the application at http://localhost:8501...
+echo Starting TRUTHSCAN AI Standard Web Application...
+echo Opening the application at http://localhost:5000...
 echo ===================================================
 echo.
 
-streamlit run app.py --server.port 8501 --server.headless false
+python server.py
 
 if %errorlevel% neq 0 (
     echo.
-    echo [ERROR] Streamlit exited with an error code: %errorlevel%
+    echo [ERROR] Server exited with an error code: %errorlevel%
     pause
 )

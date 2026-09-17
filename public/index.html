@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TRUTHSCAN AI - Fake News Detection</title>
+    <meta name="description" content="Deep Learning-Based Fake News Detection Using TextCNN and LSTM Architectures with PyTorch.">
+    <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+    <div class="app-wrapper">
+        <!-- Top Navigation Bar (Tile-Style Navigation) -->
+        <nav class="nav-container" id="main-nav">
+            <div class="nav-tiles" role="tablist">
+                <button class="nav-tile active" data-page="page-home" role="tab" aria-selected="true">Home</button>
+                <button class="nav-tile" data-page="page-detector" role="tab" aria-selected="false">Fake News Detector</button>
+                <button class="nav-tile" data-page="page-comparison" role="tab" aria-selected="false">Model Comparison</button>
+                <button class="nav-tile" data-page="page-training" role="tab" aria-selected="false">Training Session</button>
+                <button class="nav-tile" data-page="page-sessions" role="tab" aria-selected="false">Sessions</button>
+            </div>
+        </nav>
+
+        <!-- System Status Sub-header Strip -->
+        <div class="status-bar" id="system-status-bar">
+            <span><strong>System Status:</strong> Dataset: <span id="status-dataset" class="status-pill status-loading">Checking...</span></span>
+            <span>Compute: <strong id="status-compute">CPU</strong></span>
+            <span>TextCNN: <strong id="status-cnn" class="status-pill">Checking...</strong></span>
+            <span>LSTM: <strong id="status-lstm" class="status-pill">Checking...</strong></span>
+        </div>
+
+        <!-- ================================================================= -->
+        <!-- PAGE 1: HOME -->
+        <!-- ================================================================= -->
+        <section id="page-home" class="page active">
+            <div class="metallic-hero-card">
+                <div class="hero-badge">RESEARCH PLATFORM</div>
+                <h1 class="hero-title-main">Deep Learning-Based<br>Fake News Detection</h1>
+                <div class="hero-subtitle-secondary">Using TextCNN and LSTM Architectures</div>
+                <div class="hero-divider"></div>
+                <p class="hero-desc">
+                    An advanced natural language verification system that uses parallel multi-kernel 
+                    Convolutional Neural Networks and Long Short-Term Memory networks to classify news articles 
+                    with authentic empirical evaluation.
+                </p>
+            </div>
+
+            <div class="section-title">System Workflow</div>
+            <div class="section-caption">End-to-end deep learning classification pipeline:</div>
+
+            <!-- Responsive Flowchart Nodes -->
+            <div class="flowchart-container">
+                <div class="flow-step-card">
+                    <div class="flow-step-title">News Input</div>
+                    <div class="flow-step-sub">Headline + Body</div>
+                </div>
+                <div class="flow-arrow-div">→</div>
+                <div class="flow-step-card">
+                    <div class="flow-step-title">Preprocessing</div>
+                    <div class="flow-step-sub">Clean & Tokenize</div>
+                </div>
+                <div class="flow-arrow-div">→</div>
+                <div class="flow-step-card">
+                    <div class="flow-step-title">CNN / LSTM</div>
+                    <div class="flow-step-sub">Neural Features</div>
+                </div>
+                <div class="flow-arrow-div">→</div>
+                <div class="flow-step-card">
+                    <div class="flow-step-title">Classification</div>
+                    <div class="flow-step-sub">MLP Projection</div>
+                </div>
+                <div class="flow-arrow-div">→</div>
+                <div class="flow-step-card">
+                    <div class="flow-step-title">Prediction</div>
+                    <div class="flow-step-sub">Label + Confidence</div>
+                </div>
+            </div>
+
+            <div class="cta-container">
+                <button id="btn-start-detection" class="btn btn-primary btn-lg">START DETECTION →</button>
+            </div>
+
+            <hr class="divider">
+
+            <!-- Architecture Overview Cards -->
+            <div class="grid-2col">
+                <div class="premium-card">
+                    <div class="card-header-title">Architecture: TextCNN</div>
+                    <div class="card-headline">Multi-Kernel Convolutional Network</div>
+                    <div class="card-desc-text">
+                        Applies parallel 1D convolutional filter banks of sizes 3, 4, and 5 over word embeddings to detect 
+                        salient n-gram patterns, sensationalist rhetorical tropes, and informative local phrases.
+                    </div>
+                </div>
+                <div class="premium-card">
+                    <div class="card-header-title">Architecture: LSTM</div>
+                    <div class="card-headline">Sequential Context Network</div>
+                    <div class="card-desc-text">
+                        Processes word sequences recurrently through specialized gating mechanisms to capture 
+                        long-range narrative context, sequential dependencies, and stylistic consistency across the article.
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================================================================= -->
+        <!-- PAGE 2: FAKE NEWS DETECTOR -->
+        <!-- ================================================================= -->
+        <section id="page-detector" class="page">
+            <h2 class="page-title">Fake News Detector</h2>
+            <div class="page-caption">Enter a news headline and article text to analyze with trained PyTorch deep learning models.</div>
+
+            <div class="form-container">
+                <div class="form-group" style="max-width: 380px;">
+                    <label for="select-model" class="form-label">Select Model Architecture</label>
+                    <select id="select-model" class="form-select">
+                        <option value="both" selected>Compare Both (CNN & LSTM)</option>
+                        <option value="cnn">Convolutional Neural Network (CNN)</option>
+                        <option value="lstm">Long Short-Term Memory (LSTM)</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="input-headline" class="form-label">Headline</label>
+                    <input type="text" id="input-headline" class="form-input" placeholder="Enter the news headline or article title...">
+                </div>
+
+                <div class="form-group">
+                    <label for="input-article" class="form-label">Article Text</label>
+                    <textarea id="input-article" class="form-textarea" rows="8" placeholder="Paste the full body of the news article here..."></textarea>
+                </div>
+
+                <div class="btn-row">
+                    <button id="btn-analyze" class="btn btn-primary btn-md">ANALYZE NEWS</button>
+                    <button id="btn-sample-real" class="btn btn-secondary btn-md">Sample Real News</button>
+                    <button id="btn-sample-fake" class="btn btn-secondary btn-md">Sample Fake News</button>
+                </div>
+            </div>
+
+            <!-- Prediction Results Area -->
+            <div id="detector-results" style="display: none;"></div>
+        </section>
+
+        <!-- ================================================================= -->
+        <!-- PAGE 3: MODEL COMPARISON -->
+        <!-- ================================================================= -->
+        <section id="page-comparison" class="page">
+            <h2 class="page-title">Model Comparison & Evaluation</h2>
+            <div class="page-caption">Empirical performance metrics measured on the untouched 10% test dataset split.</div>
+
+            <div id="comparison-loading" class="loading-spinner">Loading empirical evaluation metrics...</div>
+
+            <div id="comparison-content" style="display: none;">
+                <!-- Best Model Banner -->
+                <div id="best-model-banner" class="alert alert-success"></div>
+
+                <div class="section-title" style="margin-top: 1.5rem;">Test Set Performance Summary</div>
+                <div class="table-container">
+                    <table class="data-table" id="table-comparison">
+                        <thead>
+                            <tr>
+                                <th>Model</th>
+                                <th>Accuracy</th>
+                                <th>Precision</th>
+                                <th>Recall</th>
+                                <th>F1 Score</th>
+                                <th>Training Time</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tbody-comparison"></tbody>
+                    </table>
+                </div>
+
+                <div class="section-title" style="margin-top: 2rem;">Performance Visualizations</div>
+                
+                <div class="chart-box" style="margin-bottom: 1.5rem;">
+                    <div class="chart-caption">CNN vs LSTM Test Metric Comparison</div>
+                    <img id="img-plot-comparison" class="chart-img" alt="CNN vs LSTM Comparison Bar Chart">
+                </div>
+
+                <div class="grid-2col">
+                    <div class="chart-box">
+                        <div class="chart-caption">Training vs Validation Learning Curves</div>
+                        <img id="img-plot-curves" class="chart-img" alt="Learning Curves">
+                    </div>
+                    <div class="chart-box">
+                        <div class="chart-caption">Confusion Matrices on Test Split</div>
+                        <img id="img-plot-cm" class="chart-img" alt="Confusion Matrices">
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================================================================= -->
+        <!-- PAGE 4: TRAINING SESSION -->
+        <!-- ================================================================= -->
+        <section id="page-training" class="page">
+            <h2 class="page-title">Model Training Pipeline</h2>
+            <div class="page-caption">Configure hyperparameters, initiate PyTorch neural training, and monitor progress in real time.</div>
+
+            <!-- Dataset Statistics Cards -->
+            <div class="grid-4col" id="stats-grid">
+                <div class="premium-card">
+                    <div class="card-header-title">Total Articles</div>
+                    <div class="card-val-display" id="stat-total">...</div>
+                </div>
+                <div class="premium-card">
+                    <div class="card-header-title">Fake Samples</div>
+                    <div class="card-val-display text-danger" id="stat-fake">...</div>
+                </div>
+                <div class="premium-card">
+                    <div class="card-header-title">Real Samples</div>
+                    <div class="card-val-display text-success" id="stat-real">...</div>
+                </div>
+                <div class="premium-card">
+                    <div class="card-header-title">Compute Device</div>
+                    <div class="card-val-display" id="stat-device">CPU</div>
+                </div>
+            </div>
+
+            <hr class="divider">
+
+            <!-- Training Configuration -->
+            <div class="section-title">Training Configuration</div>
+            <div class="grid-2col" style="margin-bottom: 1.5rem;">
+                <div class="premium-card">
+                    <div class="card-header-title">Select Mode Preset</div>
+                    <div class="radio-preset-group">
+                        <label class="radio-label">
+                            <input type="radio" name="training-mode" value="quick" checked>
+                            <span><strong>Quick Mode</strong> (5,000 authentic samples, 2 epochs, batch size 16)</span>
+                        </label>
+                        <label class="radio-label" style="margin-top: 0.8rem;">
+                            <input type="radio" name="training-mode" value="normal">
+                            <span><strong>Normal Mode</strong> (20,000 authentic samples, 5 epochs, batch size 32)</span>
+                        </label>
+                    </div>
+                </div>
+                <div class="premium-card">
+                    <div class="card-header-title">Active Parameters</div>
+                    <ul class="params-list" id="params-list">
+                        <li><strong>Samples:</strong> 5,000 authentic articles</li>
+                        <li><strong>Epochs:</strong> 2</li>
+                        <li><strong>Batch Size:</strong> 16</li>
+                        <li><strong>Learning Rate:</strong> 0.001</li>
+                        <li><strong>Split:</strong> 80% Train, 10% Validation, 10% Test (Stratified)</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Launch Training Session Controls -->
+            <div class="section-title">Launch Training Session</div>
+            <div class="form-group" style="margin-bottom: 1.2rem;">
+                <label class="checkbox-label">
+                    <input type="checkbox" id="chk-confirm-train">
+                    <span>I confirm that I want to train the selected deep learning model(s).</span>
+                </label>
+            </div>
+
+            <div class="btn-row" style="margin-bottom: 1.5rem;">
+                <button id="btn-train-cnn" class="btn btn-secondary btn-md" disabled>TRAIN CNN</button>
+                <button id="btn-train-lstm" class="btn btn-secondary btn-md" disabled>TRAIN LSTM</button>
+                <button id="btn-train-both" class="btn btn-primary btn-md" disabled>TRAIN BOTH MODELS</button>
+            </div>
+
+            <!-- Live Progress / Console Box -->
+            <div id="training-progress-container" style="display: none; margin-bottom: 1.5rem;">
+                <div class="progress-bar-bg">
+                    <div id="training-progress-bar" class="progress-bar-fill" style="width: 0%;"></div>
+                </div>
+                <div id="training-status-text" class="status-msg" style="margin-top: 0.5rem;">Initializing training pipeline...</div>
+                <pre id="training-console-logs" class="console-box" style="margin-top: 0.8rem;"></pre>
+            </div>
+
+            <!-- Persistent Latest Training Output Area -->
+            <div id="latest-training-container" style="display: none;"></div>
+        </section>
+
+        <!-- ================================================================= -->
+        <!-- PAGE 5: SESSIONS -->
+        <!-- ================================================================= -->
+        <section id="page-sessions" class="page">
+            <h2 class="page-title">Sessions & Historical Analysis</h2>
+            <div class="page-caption">Inspect prediction history, model training checkpoints, and system performance sessions.</div>
+
+            <!-- Sub-Tabs -->
+            <div class="subtabs-bar" role="tablist">
+                <button class="subtab-btn active" data-subtab="subtab-preds">Prediction History</button>
+                <button class="subtab-btn" data-subtab="subtab-histories">Training Histories</button>
+                <button class="subtab-btn" data-subtab="subtab-specs">Model Checkpoints & Specs</button>
+            </div>
+
+            <!-- Subtab 1: Prediction History -->
+            <div id="subtab-preds" class="subtab-content active">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                    <div class="section-title" style="margin: 0;">Active Session Predictions</div>
+                    <button id="btn-clear-history" class="btn btn-secondary btn-sm">CLEAR PREDICTION HISTORY</button>
+                </div>
+                <div id="prediction-history-table-box" class="table-container">
+                    <table class="data-table" id="table-prediction-history">
+                        <thead>
+                            <tr>
+                                <th>Timestamp</th>
+                                <th>Headline / Snippet</th>
+                                <th>Model</th>
+                                <th>Result / Confidence</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tbody-prediction-history">
+                            <tr><td colspan="4" style="text-align: center; color: #A7B5AD;">No predictions recorded yet. Use the Fake News Detector tab to test articles.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="section-title" style="margin-top: 1.8rem;">Recent Prediction Cards</div>
+                <div id="recent-prediction-cards"></div>
+            </div>
+
+            <!-- Subtab 2: Training Histories -->
+            <div id="subtab-histories" class="subtab-content">
+                <div class="section-title">Training Histories & Learning Curves</div>
+                <div class="grid-2col" id="training-histories-grid">
+                    <div class="premium-card" id="card-cnn-history">
+                        <div class="card-header-title">TextCNN Training Summary</div>
+                        <div id="content-cnn-history">Loading...</div>
+                    </div>
+                    <div class="premium-card" id="card-lstm-history">
+                        <div class="card-header-title">LSTM Training Summary</div>
+                        <div id="content-lstm-history">Loading...</div>
+                    </div>
+                </div>
+
+                <div class="chart-box" style="margin-top: 1.5rem;">
+                    <div class="chart-caption">Training & Validation Learning Curves</div>
+                    <img id="img-sessions-curves" class="chart-img" alt="Learning Curves">
+                </div>
+            </div>
+
+            <!-- Subtab 3: Model Checkpoints & Specs -->
+            <div id="subtab-specs" class="subtab-content">
+                <div class="section-title">Active Model Checkpoints & Specifications</div>
+                <div class="grid-2col">
+                    <div class="premium-card">
+                        <div class="card-header-title">TextCNN Architecture Specs</div>
+                        <ul class="params-list">
+                            <li><strong>Embedding Dimension:</strong> 128</li>
+                            <li><strong>Filter Banks:</strong> 100 filters per kernel</li>
+                            <li><strong>Kernel Sizes:</strong> [3, 4, 5] parallel receptive fields</li>
+                            <li><strong>Classification Head:</strong> 2-Stage MLP (300 → 128 → 1) with Dropout</li>
+                            <li><strong>Checkpoint Path:</strong> checkpoints/cnn_best.pth</li>
+                            <li><strong>Status:</strong> <span id="specs-cnn-status" class="status-pill">Checking...</span></li>
+                        </ul>
+                    </div>
+                    <div class="premium-card">
+                        <div class="card-header-title">LSTM Architecture Specs</div>
+                        <ul class="params-list">
+                            <li><strong>Embedding Dimension:</strong> 128</li>
+                            <li><strong>Hidden Dimension:</strong> 128</li>
+                            <li><strong>Recurrent Layers:</strong> 1 (Unidirectional)</li>
+                            <li><strong>Dropout:</strong> 0.3</li>
+                            <li><strong>Checkpoint Path:</strong> checkpoints/lstm_best.pth</li>
+                            <li><strong>Status:</strong> <span id="specs-lstm-status" class="status-pill">Checking...</span></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <footer class="app-footer">
+            <div class="footer-text">TRUTHSCAN AI — Deep Learning Fake News Detection Using TextCNN & LSTM</div>
+            <div class="footer-sub">Standard Web Application • Localhost & Vercel Unified Deployment</div>
+        </footer>
+    </div>
+
+    <!-- Application Script -->
+    <script src="/js/app.js"></script>
+</body>
+</html>

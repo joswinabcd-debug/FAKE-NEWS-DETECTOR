@@ -1,0 +1,19 @@
+{
+  "available": true,
+  "total_articles": 39094,
+  "fake_articles": 17899,
+  "real_articles": 21195,
+  "train_samples": 31275,
+  "val_samples": 3909,
+  "test_samples": 3910,
+  "avg_article_length": 407.7,
+  "subjects": {
+    "politicsNews": 11216,
+    "worldnews": 9979,
+    "News": 9049,
+    "politics": 6831,
+    "US_News": 783,
+    "left-news": 705,
+    "Government News": 531
+  }
+}

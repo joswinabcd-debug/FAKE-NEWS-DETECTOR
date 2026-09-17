@@ -41,6 +41,8 @@ def parse_arguments():
                         help="Body text of the news article for prediction")
     parser.add_argument("--stats", action="store_true",
                         help="Display dataset balance and split statistics")
+    parser.add_argument("--serve", action="store_true",
+                        help="Launch the standard local web application server")
 
     return parser.parse_args()
 
@@ -61,8 +63,9 @@ def main():
         print("  python main.py --train both --mode quick   # Train CNN and LSTM")
         print("  python main.py --evaluate           # Evaluate on test set & generate charts")
         print("  python main.py --predict --model both --title '...' --text '...'")
-        print("\nTo launch the web interface:")
-        print("  streamlit run app.py")
+        print("\nTo launch the web application:")
+        print("  python server.py")
+        print("  (or: python main.py --serve)")
         print("=" * 60)
         return
 
@@ -129,6 +132,11 @@ def main():
             print(f"\nModel:           {res['model']}")
             print(f"Model Prediction: {res['prediction']}")
             print(f"Confidence:       {res['confidence']}%")
+
+    # 7. Serve Web App
+    if args.serve:
+        from server import run_server
+        run_server()
 
 
 if __name__ == "__main__":
