@@ -1,7 +1,8 @@
 """
 Model Evaluation and Visualization Module for TRUTHSCAN AI.
 Evaluates trained checkpoints on the untouched test dataset.
-Generates genuine metric tables, confusion matrices, and comparison plots.
+Generates genuine metric tables, confusion matrices, and comparison plots
+styled with Dark AI theme aesthetics.
 """
 
 import os
@@ -28,6 +29,31 @@ from src.dataset import load_processed_splits, NewsDataset
 from src.tokenizer import Tokenizer
 from models.textcnn_model import TextCNN
 from models.lstm_model import LSTMClassifier
+
+
+# Dark AI Theme Styling Configuration for Matplotlib
+DARK_BG = "#0B120E"
+DARKER_BG = "#050807"
+ACCENT_GREEN = "#00E676"
+ACCENT_GREEN_MUTED = "#00B85A"
+TEXT_COLOR = "#FFFFFF"
+MUTED_TEXT = "#A7B5AD"
+GRID_COLOR = "#152B1E"
+CARD_BORDER = "#1B3828"
+
+
+def apply_dark_theme(fig, axes):
+    """Applies Dark AI Dashboard styling to matplotlib figures."""
+    fig.patch.set_facecolor(DARKER_BG)
+    axes_list = axes if isinstance(axes, (list, np.ndarray)) else [axes]
+    for ax in axes_list:
+        ax.set_facecolor(DARK_BG)
+        ax.tick_params(colors=MUTED_TEXT, labelsize=9)
+        ax.xaxis.label.set_color(TEXT_COLOR)
+        ax.yaxis.label.set_color(TEXT_COLOR)
+        ax.title.set_color(TEXT_COLOR)
+        for spine in ax.spines.values():
+            spine.set_edgecolor(CARD_BORDER)
 
 
 def load_model_from_checkpoint(model_type: str, checkpoint_path: str, device: torch.device) -> nn.Module:
@@ -61,7 +87,19 @@ def load_model_from_checkpoint(model_type: str, checkpoint_path: str, device: to
     else:
         raise ValueError(f"Unknown model type: {model_type}")
 
-    model.load_state_dict(checkpoint["model_state_dict"])
+    state_dict = checkpoint["model_state_dict"]
+    
+    # Gracefully handle loading older 1-stage TextCNN weights into updated model
+    if model_type == "cnn" and "fc.weight" in state_dict and "fc1.weight" not in state_dict:
+        model.fc1 = nn.Identity()
+        model.fc2 = nn.Linear(cfg["num_filters"] * len(cfg["kernel_sizes"]), 1)
+        model.fc2.weight.data = state_dict["fc.weight"]
+        model.fc2.bias.data = state_dict["fc.bias"]
+        filtered_state = {k: v for k, v in state_dict.items() if not k.startswith("fc.")}
+        model.load_state_dict(filtered_state, strict=False)
+    else:
+        model.load_state_dict(state_dict)
+
     model.to(device)
     model.eval()
     return model
@@ -109,32 +147,40 @@ def plot_loss_and_accuracy_curves():
     if not histories:
         return
 
-    # 1. Loss Curves
-    fig, axes = plt.subplots(1, 2, figsize=(14, 5))
+    fig, axes = plt.subplots(1, 2, figsize=(13, 4.8))
+    apply_dark_theme(fig, axes)
     
+    palette = {
+        "CNN": {"train": "#38BDF8", "val": "#00E676"},
+        "LSTM": {"train": "#F59E0B", "val": "#EC4899"}
+    }
+
     for name, h in histories.items():
         epochs = list(range(1, len(h["train_loss"]) + 1))
-        axes[0].plot(epochs, h["train_loss"], label=f"{name} Train Loss", linestyle="--")
-        axes[0].plot(epochs, h["val_loss"], label=f"{name} Val Loss", linewidth=2)
+        c_train = palette.get(name, {}).get("train", "#94A3B8")
+        c_val = palette.get(name, {}).get("val", ACCENT_GREEN)
         
-        axes[1].plot(epochs, [a * 100 for a in h["train_acc"]], label=f"{name} Train Acc", linestyle="--")
-        axes[1].plot(epochs, [a * 100 for a in h["val_acc"]], label=f"{name} Val Acc", linewidth=2)
+        axes[0].plot(epochs, h["train_loss"], label=f"{name} Train Loss", linestyle="--", color=c_train, alpha=0.8)
+        axes[0].plot(epochs, h["val_loss"], label=f"{name} Val Loss", linewidth=2.2, color=c_val)
+        
+        axes[1].plot(epochs, [a * 100 for a in h["train_acc"]], label=f"{name} Train Acc", linestyle="--", color=c_train, alpha=0.8)
+        axes[1].plot(epochs, [a * 100 for a in h["val_acc"]], label=f"{name} Val Acc", linewidth=2.2, color=c_val)
 
-    axes[0].set_title("Training vs Validation Loss", fontsize=13, fontweight="bold")
-    axes[0].set_xlabel("Epoch", fontsize=11)
-    axes[0].set_ylabel("Binary Cross Entropy Loss", fontsize=11)
-    axes[0].legend()
-    axes[0].grid(True, linestyle=":", alpha=0.6)
+    axes[0].set_title("Training vs Validation Loss", fontsize=12, fontweight="bold", pad=10)
+    axes[0].set_xlabel("Epoch", fontsize=10)
+    axes[0].set_ylabel("Binary Cross Entropy Loss", fontsize=10)
+    axes[0].legend(facecolor=DARK_BG, edgecolor=CARD_BORDER, labelcolor=TEXT_COLOR, fontsize=8.5)
+    axes[0].grid(True, linestyle=":", color=GRID_COLOR, alpha=0.7)
 
-    axes[1].set_title("Training vs Validation Accuracy (%)", fontsize=13, fontweight="bold")
-    axes[1].set_xlabel("Epoch", fontsize=11)
-    axes[1].set_ylabel("Accuracy (%)", fontsize=11)
-    axes[1].legend()
-    axes[1].grid(True, linestyle=":", alpha=0.6)
+    axes[1].set_title("Training vs Validation Accuracy (%)", fontsize=12, fontweight="bold", pad=10)
+    axes[1].set_xlabel("Epoch", fontsize=10)
+    axes[1].set_ylabel("Accuracy (%)", fontsize=10)
+    axes[1].legend(facecolor=DARK_BG, edgecolor=CARD_BORDER, labelcolor=TEXT_COLOR, fontsize=8.5)
+    axes[1].grid(True, linestyle=":", color=GRID_COLOR, alpha=0.7)
 
     plt.tight_layout()
     loss_acc_path = os.path.join(config.PLOTS_DIR, "loss_accuracy_curves.png")
-    plt.savefig(loss_acc_path, dpi=200)
+    plt.savefig(loss_acc_path, dpi=200, facecolor=fig.get_facecolor())
     plt.close()
 
 
@@ -145,37 +191,39 @@ def plot_confusion_matrices(cm_dict: Dict[str, np.ndarray]):
     if n == 0:
         return
 
-    fig, axes = plt.subplots(1, n, figsize=(6 * n, 5))
+    fig, axes = plt.subplots(1, n, figsize=(5.5 * n, 4.6))
     if n == 1:
         axes = [axes]
 
+    apply_dark_theme(fig, axes)
     labels = ["Real (0)", "Fake (1)"]
 
     for ax, (name, cm) in zip(axes, cm_dict.items()):
-        im = ax.imshow(cm, interpolation="nearest", cmap=plt.cm.Blues)
-        ax.set_title(f"{name} Confusion Matrix", fontsize=12, fontweight="bold")
-        fig.colorbar(im, ax=ax, fraction=0.046, pad=0.04)
+        im = ax.imshow(cm, interpolation="nearest", cmap=plt.cm.Greens)
+        ax.set_title(f"{name} Confusion Matrix", fontsize=11, fontweight="bold", pad=10)
+        cbar = fig.colorbar(im, ax=ax, fraction=0.046, pad=0.04)
+        cbar.ax.yaxis.set_tick_params(color=MUTED_TEXT)
+        plt.setp(plt.getp(cbar.ax.axes, 'yticklabels'), color=MUTED_TEXT)
         
         tick_marks = np.arange(len(labels))
         ax.set_xticks(tick_marks)
-        ax.set_xticklabels(labels, fontsize=10)
+        ax.set_xticklabels(labels, fontsize=9.5)
         ax.set_yticks(tick_marks)
-        ax.set_yticklabels(labels, fontsize=10)
-        ax.set_xlabel("Predicted Label", fontsize=11)
-        ax.set_ylabel("True Label", fontsize=11)
+        ax.set_yticklabels(labels, fontsize=9.5)
+        ax.set_xlabel("Predicted Label", fontsize=10)
+        ax.set_ylabel("True Label", fontsize=10)
 
-        # Annotate text
         thresh = cm.max() / 2.0
         for i in range(cm.shape[0]):
             for j in range(cm.shape[1]):
                 ax.text(j, i, format(cm[i, j], "d"),
                         ha="center", va="center",
-                        color="white" if cm[i, j] > thresh else "black",
-                        fontsize=12, fontweight="bold")
+                        color="black" if cm[i, j] > thresh else "white",
+                        fontsize=11, fontweight="bold")
 
     plt.tight_layout()
     cm_path = os.path.join(config.PLOTS_DIR, "confusion_matrices.png")
-    plt.savefig(cm_path, dpi=200)
+    plt.savefig(cm_path, dpi=200, facecolor=fig.get_facecolor())
     plt.close()
 
 
@@ -189,38 +237,42 @@ def plot_model_comparison_bar(df_comparison: pd.DataFrame):
     x = np.arange(len(metrics))
     width = 0.35
 
-    fig, ax = plt.subplots(figsize=(9, 5))
+    fig, ax = plt.subplots(figsize=(8.5, 4.6))
+    apply_dark_theme(fig, ax)
+
+    colors = ["#00E676", "#38BDF8"]
 
     for idx, row in df_comparison.iterrows():
         model_name = row["Model"]
         values = [row[m] * 100 for m in metrics]
         offset = (idx - 0.5) * width if len(df_comparison) > 1 else 0
-        bars = ax.bar(x + offset, values, width, label=model_name, alpha=0.85)
+        c = colors[idx % len(colors)]
+        bars = ax.bar(x + offset, values, width, label=model_name, color=c, alpha=0.9, edgecolor=CARD_BORDER)
         for bar in bars:
             height = bar.get_height()
             ax.annotate(f"{height:.1f}%",
                         xy=(bar.get_x() + bar.get_width() / 2, height),
-                        xytext=(0, 3),
+                        xytext=(0, 4),
                         textcoords="offset points",
-                        ha="center", va="bottom", fontsize=9, fontweight="bold")
+                        ha="center", va="bottom", fontsize=8.5, fontweight="bold", color=TEXT_COLOR)
 
-    ax.set_ylabel("Score (%)", fontsize=11)
-    ax.set_title("CNN vs LSTM Performance Comparison on Test Set", fontsize=13, fontweight="bold")
+    ax.set_ylabel("Score (%)", fontsize=10)
+    ax.set_title("CNN vs LSTM Performance Comparison on Test Set", fontsize=12, fontweight="bold", pad=10)
     ax.set_xticks(x)
-    ax.set_xticklabels(metrics, fontsize=11)
-    ax.set_ylim(0, 110)
-    ax.legend(loc="lower right")
-    ax.grid(axis="y", linestyle=":", alpha=0.6)
+    ax.set_xticklabels(metrics, fontsize=10)
+    ax.set_ylim(0, 115)
+    ax.legend(facecolor=DARK_BG, edgecolor=CARD_BORDER, labelcolor=TEXT_COLOR, loc="lower right", fontsize=9)
+    ax.grid(axis="y", linestyle=":", color=GRID_COLOR, alpha=0.7)
 
     plt.tight_layout()
     comp_plot_path = os.path.join(config.PLOTS_DIR, "model_comparison.png")
-    plt.savefig(comp_plot_path, dpi=200)
+    plt.savefig(comp_plot_path, dpi=200, facecolor=fig.get_facecolor())
     plt.close()
 
 
 def evaluate_models() -> Dict[str, Any]:
     """
-    Evaluates whatever models have checkpoints available on the test dataset.
+    Evaluates available trained checkpoints on the untouched test dataset.
     Writes results/model_comparison.csv and generates comparison plots.
     """
     splits = load_processed_splits()

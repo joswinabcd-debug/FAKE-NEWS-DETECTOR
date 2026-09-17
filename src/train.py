@@ -1,6 +1,7 @@
 """
 Training Pipeline for TRUTHSCAN AI.
-Supports TextCNN, LSTM, or Both with validation tracking, checkpointing, and progress reporting.
+Supports TextCNN, LSTM, or Both with validation tracking, checkpointing,
+learning rate scheduling, and progress reporting.
 """
 
 import os
@@ -9,6 +10,7 @@ import json
 import torch
 import torch.nn as nn
 from torch.optim import Adam
+from torch.optim.lr_scheduler import ReduceLROnPlateau
 from typing import Dict, Any, Optional, Callable
 
 import config
@@ -174,7 +176,8 @@ def train_model(
         history_path = config.LSTM_HISTORY_FILE
 
     criterion = nn.BCEWithLogitsLoss()
-    optimizer = Adam(model.parameters(), lr=lr)
+    optimizer = Adam(model.parameters(), lr=lr, weight_decay=1e-5)
+    scheduler = ReduceLROnPlateau(optimizer, mode="min", factor=0.5, patience=1)
 
     history = {
         "train_loss": [],
@@ -211,6 +214,8 @@ def train_model(
             device=device
         )
 
+        scheduler.step(val_res["loss"])
+
         epoch_duration = time.time() - epoch_start
         history["train_loss"].append(round(train_res["loss"], 4))
         history["train_acc"].append(round(train_res["acc"], 4))
@@ -224,7 +229,7 @@ def train_model(
         )
         log(log_line)
 
-        # Save checkpoint strictly if validation performance improves (best validation accuracy)
+        # Save checkpoint strictly if validation performance improves
         if val_res["acc"] > best_val_acc or (val_res["acc"] == best_val_acc and val_res["loss"] < best_val_loss):
             best_val_acc = val_res["acc"]
             best_val_loss = val_res["loss"]
@@ -275,9 +280,8 @@ def train_pipeline(
     if target not in ["cnn", "lstm", "both"]:
         raise ValueError("target must be 'cnn', 'lstm', or 'both'")
 
-    # Prepare shared data once
     if log_callback:
-        log_callback("Preparing stratified dataset splits...")
+        log_callback("Preparing stratified dataset splits with sanitized text...")
     data_dict, tokenizer = prepare_data(mode=mode)
 
     results = {}

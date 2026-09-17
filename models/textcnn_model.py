@@ -1,6 +1,7 @@
 """
 TextCNN Model Architecture for TRUTHSCAN AI.
-Implements multi-filter 1D convolutional neural network for text classification.
+Implements multi-filter 1D convolutional neural network for text classification
+with enhanced 2-stage representation classifier.
 """
 
 import torch
@@ -11,22 +12,26 @@ from typing import List, Optional
 
 class TextCNN(nn.Module):
     """
-    TextCNN Classifier Architecture:
+    Enhanced TextCNN Classifier Architecture:
     Input Text (Batch, Seq_Len)
         ↓
     Embedding Layer (Batch, Seq_Len, Embed_Dim) -> Permute to (Batch, Embed_Dim, Seq_Len)
         ↓
-    Multiple Conv1D Layers (Kernels: 3, 4, 5, Filters: 100 each)
+    Multiple Parallel Conv1D Layers (Kernels: 3, 4, 5, Filters: 100 each)
         ↓
     ReLU Activation
         ↓
-    Max-over-time Pooling (Batch, Filters, 1) -> (Batch, Filters)
+    Adaptive Max-over-time Pooling (Batch, Filters, 1) -> (Batch, Filters)
         ↓
-    Concatenate pooled outputs -> (Batch, len(Kernels) * Filters)
+    Concatenate pooled outputs -> (Batch, len(Kernels) * Filters = 300)
         ↓
     Dropout (0.5)
         ↓
-    Fully Connected Layer -> (Batch, 1)
+    Intermediate Dense Projection (300 -> 128) + ReLU
+        ↓
+    Dropout (0.3)
+        ↓
+    Final Classification Projection (128 -> 1)
         ↓
     Binary Classification Logits
     """
@@ -53,7 +58,7 @@ class TextCNN(nn.Module):
         # Word Embedding Layer
         self.embedding = nn.Embedding(vocab_size, embedding_dim, padding_idx=padding_idx)
         
-        # Parallel 1D Convolutions with distinct receptive fields (e.g. 3, 4, 5)
+        # Parallel 1D Convolutions with distinct receptive fields (3, 4, 5)
         self.convs = nn.ModuleList([
             nn.Conv1d(
                 in_channels=embedding_dim,
@@ -65,9 +70,14 @@ class TextCNN(nn.Module):
         # Regularization Dropout
         self.dropout = nn.Dropout(dropout)
         
-        # Dense classification projection
+        # 2-Stage MLP Classifier for non-linear n-gram feature combinations
         total_filter_units = num_filters * len(self.kernel_sizes)
-        self.fc = nn.Linear(total_filter_units, 1)
+        self.fc1 = nn.Linear(total_filter_units, 128)
+        self.dropout_fc = nn.Dropout(0.3)
+        self.fc2 = nn.Linear(128, 1)
+        
+        # Backward compatibility alias
+        self.fc = self.fc2
         
         # Parameter Initialization
         self._init_weights()
@@ -84,9 +94,13 @@ class TextCNN(nn.Module):
             if conv.bias is not None:
                 nn.init.constant_(conv.bias, 0.0)
                 
-        nn.init.xavier_uniform_(self.fc.weight)
-        if self.fc.bias is not None:
-            nn.init.constant_(self.fc.bias, 0.0)
+        nn.init.xavier_uniform_(self.fc1.weight)
+        if self.fc1.bias is not None:
+            nn.init.constant_(self.fc1.bias, 0.0)
+            
+        nn.init.xavier_uniform_(self.fc2.weight)
+        if self.fc2.bias is not None:
+            nn.init.constant_(self.fc2.bias, 0.0)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """
@@ -120,7 +134,10 @@ class TextCNN(nn.Module):
         cat = torch.cat(pooled_outputs, dim=1)  # (batch_size, total_filter_units)
         cat = self.dropout(cat)
         
-        logits = self.fc(cat)  # (batch_size, 1)
+        # 2-stage MLP projection
+        dense = F.relu(self.fc1(cat))
+        dense = self.dropout_fc(dense)
+        logits = self.fc2(dense)  # (batch_size, 1)
         return logits
 
     def predict_proba(self, x: torch.Tensor) -> torch.Tensor:
