@@ -33,10 +33,11 @@ def get_predictor():
     return _PREDICTOR_INSTANCE
 
 
-class ApiHandler(BaseHTTPRequestHandler):
+class handler(BaseHTTPRequestHandler):
     """
     Unified HTTP Request Handler for TRUTHSCAN AI.
     Handles REST API endpoints (/api/*) and static files on localhost.
+    Exposes top-level 'handler', 'app', and 'application' for Vercel Serverless Function runtime.
     """
 
     def _set_headers(self, status=200, content_type="application/json"):
@@ -358,5 +359,10 @@ class ApiHandler(BaseHTTPRequestHandler):
             self.wfile.write(f"Server error: {e}".encode("utf-8"))
 
 
-# Vercel Serverless Function entry point
-handler = ApiHandler
+# =====================================================================
+# Top-Level Exports for Vercel Serverless Function Runtime & Localhost
+# Exposes 'handler', 'app', 'application', and 'ApiHandler'
+# =====================================================================
+ApiHandler = handler
+app = handler
+application = handler

@@ -13,7 +13,7 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 if BASE_DIR not in sys.path:
     sys.path.insert(0, BASE_DIR)
 
-from api.index import ApiHandler
+from api.index import handler, ApiHandler, app, application
 
 
 def run_server(port: int = None, open_browser: bool = False):
@@ -25,12 +25,12 @@ def run_server(port: int = None, open_browser: bool = False):
     server_address = (host, port)
     
     try:
-        httpd = ThreadingHTTPServer(server_address, ApiHandler)
+        httpd = ThreadingHTTPServer(server_address, handler)
     except OSError:
         # Fallback to port + 1 if busy
         port += 1
         server_address = (host, port)
-        httpd = ThreadingHTTPServer(server_address, ApiHandler)
+        httpd = ThreadingHTTPServer(server_address, handler)
 
     url = f"http://localhost:{port}"
     print("=" * 60)

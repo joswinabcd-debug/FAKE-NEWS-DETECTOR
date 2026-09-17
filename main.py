@@ -14,6 +14,9 @@ from src.train import train_pipeline
 from src.evaluate import evaluate_models
 from src.predict import NewsPredictor
 
+# Top-level exports for Vercel discovery if root entrypoints are scanned
+from api.index import handler, ApiHandler, app, application
+
 
 def parse_arguments():
     parser = argparse.ArgumentParser(
